@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: meeting-app
+    runtime: docker
+    rootDir: .
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
