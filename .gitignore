@@ -9,3 +9,16 @@ dist/
 # Playwright
 test-results/
 playwright-report/
+
+# Frontend env
+frontend/.env
+frontend/.env.local
+
+# OS files
+.DS_Store
+
+# TypeSpec output
+tsp-output/
+
+# Local Docker artifacts
+*.tar
