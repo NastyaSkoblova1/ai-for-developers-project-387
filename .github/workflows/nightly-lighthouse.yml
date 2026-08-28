@@ -1,0 +1,80 @@
+name: Nightly Lighthouse audit
+
+on:
+  schedule:
+    # Каждый день в 02:00 UTC.
+    # GitHub cron всегда интерпретируется в UTC.
+    - cron: '0 2 * * *'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse report
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Build backend
+        run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Start application
+        run: |
+          npm run start > server.log 2>&1 &
+          echo $! > server.pid
+
+      - name: Wait for server
+        run: npx wait-on http://127.0.0.1:3000 --timeout 60000
+
+      - name: Run Lighthouse
+        run: |
+          mkdir -p lighthouse-reports
+          npx --yes lighthouse http://127.0.0.1:3000 \
+            --output html \
+            --output json \
+            --output-path lighthouse-reports/report \
+            --chrome-flags="--headless --no-sandbox"
+
+      - name: Add run information
+        if: always()
+        run: |
+          {
+            echo "Run date (UTC): $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            echo "Commit: $GITHUB_SHA"
+            echo "Ref: $GITHUB_REF"
+            echo "Event: $GITHUB_EVENT_NAME"
+          } > lighthouse-reports/run-info.txt
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report-${{ github.run_number }}
+          path: |
+            lighthouse-reports/
+            server.log
+          if-no-files-found: warn
+          retention-days: 14
