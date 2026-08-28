@@ -1,5 +1,6 @@
 import { memoryStore } from "../storage/memory-store.js";
 import type { Slot } from "../storage/memory-store.js";
+import { findConflictingBooking } from "./availability.js";
 import {
   WORKDAY_START_HOUR,
   WORKDAY_END_HOUR,
@@ -41,9 +42,7 @@ export function generateSlots(eventTypeId: string): Slot[] {
       const slotId = `${eventTypeId}__${isoString(slotStart)}`;
       const slotEndIso = isoString(slotEnd);
       const startIso = isoString(slotStart);
-      const isBooked = memoryStore.bookings.some(
-        (b) => b.slotId === slotId || (b.startTime < slotEndIso && b.endTime > startIso),
-      );
+      const isBooked = Boolean(findConflictingBooking(slotId, startIso, slotEndIso));
 
       slots.push({
         id: slotId,

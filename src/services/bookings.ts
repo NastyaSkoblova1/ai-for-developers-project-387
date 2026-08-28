@@ -2,6 +2,7 @@ import { memoryStore } from "../storage/memory-store.js";
 import { conflict, notFound, badRequest } from "../lib/errors.js";
 import type { Booking } from "../storage/memory-store.js";
 import { generateSlots } from "./slots.js";
+import { findConflictingBooking } from "./availability.js";
 import { isoString } from "../lib/dates.js";
 
 export function listBookings(): Booking[] {
@@ -33,10 +34,7 @@ export function createBooking(data: {
     throw conflict("Selected slot is no longer available");
   }
 
-  const alreadyBooked = memoryStore.bookings.some(
-    (b) => b.slotId === slotId || (b.startTime < slot.endTime && b.endTime > slot.startTime),
-  );
-  if (alreadyBooked) {
+  if (findConflictingBooking(slotId, slot.startTime, slot.endTime)) {
     throw conflict("Selected slot is no longer available");
   }
 
