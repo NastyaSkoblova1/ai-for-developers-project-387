@@ -13,14 +13,13 @@ import {
 } from "../lib/dates.js";
 
 export function generateSlots(eventTypeId: string): Slot[] {
-  const now = new Date();
   const slots: Slot[] = [];
 
   const eventType = memoryStore.eventTypes.find((et) => et.id === eventTypeId);
   if (!eventType) return [];
 
   for (let dayOffset = 0; dayOffset < BOOKING_WINDOW_DAYS; dayOffset++) {
-    const day = addDaysUtc(startOfDayUtc(now), dayOffset);
+    const day = addDaysUtc(startOfDayUtc(new Date()), dayOffset);
     if (isWeekendUtc(day)) continue;
 
     const dayStartMinutes = WORKDAY_START_HOUR * 60;
@@ -35,14 +34,15 @@ export function generateSlots(eventTypeId: string): Slot[] {
     ) {
       const slotStart = new Date(day);
       slotStart.setUTCHours(Math.floor(minuteOfDay / 60), minuteOfDay % 60, 0, 0);
-      if (dayOffset === 0 && slotStart <= now) continue;
 
       const slotEnd = addMinutesUtc(slotStart, eventType.durationMinutes);
       if (slotEnd > dayEnd) continue;
 
       const slotId = `${eventTypeId}__${isoString(slotStart)}`;
+      const slotEndIso = isoString(slotEnd);
+      const startIso = isoString(slotStart);
       const isBooked = memoryStore.bookings.some(
-        (b) => b.slotId === slotId || (b.startTime === isoString(slotStart) && b.eventTypeId === eventTypeId),
+        (b) => b.slotId === slotId || (b.startTime < slotEndIso && b.endTime > startIso),
       );
 
       slots.push({
