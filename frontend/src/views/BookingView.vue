@@ -19,7 +19,7 @@ const eventType = computed(() => eventTypes.value?.find((et: { id: string }) => 
 
 const { data: allSlots, isLoading: slotsLoading, isError: slotsError } = usePublicSlotsQuery(eventTypeId.value)
 
-const selectedDate = ref<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000))
+const selectedDate = ref<Date>(new Date())
 const selectedSlotId = ref<string | null>(null)
 const showForm = ref(false)
 const isSubmitting = ref(false)
