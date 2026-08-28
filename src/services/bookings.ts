@@ -33,7 +33,9 @@ export function createBooking(data: {
     throw conflict("Selected slot is no longer available");
   }
 
-  const alreadyBooked = memoryStore.bookings.some((b) => b.slotId === slotId);
+  const alreadyBooked = memoryStore.bookings.some(
+    (b) => b.slotId === slotId || (b.startTime < slot.endTime && b.endTime > slot.startTime),
+  );
   if (alreadyBooked) {
     throw conflict("Selected slot is no longer available");
   }
